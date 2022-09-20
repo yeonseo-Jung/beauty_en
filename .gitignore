@@ -1,5 +1,8 @@
 # test code
 _test.ipynb
 
+# ds
+.DS_Store
+
 # __pycache__
 __pycache__/
