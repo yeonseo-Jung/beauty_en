@@ -91,10 +91,14 @@ class ReviewData:
     
     #     return res_data
                     
-    def _crawling(self):
-        # table backup
-        db_glamai = AccessDatabase('glamai')
-        db_glamai._backup(table_name='sephora_txt_data_re', keep=True)
+    def _crawling(self, backup=True):
+        
+        if backup:
+            # table backup
+            db_glamai = AccessDatabase('glamai')
+            db_glamai._backup(table_name='sephora_txt_data_re', keep=True)
+        else:
+            pass
         
         now = datetime.datetime.today()
         product_list = self.get_review_max_date()
