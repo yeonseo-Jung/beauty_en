@@ -64,7 +64,9 @@ def get_data_ulta(url):
             elif normal_price == sale_price:
                 is_sale = 0
             else:
-                is_use, is_sale = -1, -1
+                _normal_price = normal_price
+                normal_price = sale_price
+                sale_price = _normal_price
             
         except NoSuchElementException:
             if big_price_flag:

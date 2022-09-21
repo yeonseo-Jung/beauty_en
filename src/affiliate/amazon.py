@@ -74,7 +74,16 @@ def get_data_amazon(url):
                             elif price_normal == price_sale:
                                 pass
                             else:
-                                is_use, is_sale = -1, -1
+                                if price_normal == 0:
+                                    is_sale = 0
+                                    price_normal = price_sale
+                                else:
+                                    is_sale = 1
+                                    _price_normal = price_normal
+                                    price_normal = price_sale
+                                    price_sale = _price_normal
+                                
+                                
                                 
             elif soup.find('div', {'id': 'corePrice_desktop'}) is not None:
                 price_area = soup.find('div', {'id': 'corePrice_desktop'})
@@ -96,7 +105,14 @@ def get_data_amazon(url):
                 elif price_normal == price_sale:
                     pass
                 else:
-                    is_use, is_sale = -1, -1
+                    if price_normal == 0:
+                        is_sale = 0
+                        price_normal = price_sale
+                    else:
+                        is_sale = 1
+                        _price_normal = price_normal
+                        price_normal = price_sale
+                        price_sale = _price_normal
     
             else:
                 is_use, is_sale = -1, -1
