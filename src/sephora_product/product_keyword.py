@@ -160,7 +160,6 @@ class ProductKeyword:
             insert_products += insert_product
             update_products += update_product
         
-        
         self._insert(work='insert', data=insert_products)
         self._insert(work='update_new', data=update_products)
         upload_df = self.dup_check()
