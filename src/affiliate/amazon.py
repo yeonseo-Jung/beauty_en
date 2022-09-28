@@ -83,8 +83,6 @@ def get_data_amazon(url):
                                     price_normal = price_sale
                                     price_sale = _price_normal
                                 
-                                
-                                
             elif soup.find('div', {'id': 'corePrice_desktop'}) is not None:
                 price_area = soup.find('div', {'id': 'corePrice_desktop'})
                 try:
@@ -97,6 +95,7 @@ def get_data_amazon(url):
                 try:
                     price = price_area.find('span', 'a-price a-text-price a-size-medium apexPriceToPay').find_all('span', 'a-offscreen')[0].text
                     price_sale = round(float(price[1:]), 2)
+                    is_use = 1
                 except:
                     pass
                     
