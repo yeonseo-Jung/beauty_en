@@ -182,28 +182,6 @@ class UpdateProductSale:
         
         return price_data, status
     
-# def update_sephora_sale_all():
-#     sale = UpdateProductSale()
-#     verticals = ['face_base', 'eye', 'lip_color', 'moisturizers', 'cheek', 'treatments', 'masks', 'eye_care', 'body_care', 'mens', 'fragrance_men', 'fragrance_women', 'wellness', 'cleansers']
-#     price_data_dict = {}
-#     for vertical in tqdm(verticals):
-#         sale.__conn__()
-#         product_codes = sale.get_data(vertical)
-#         sale.insert_data_new(vertical)
-
-#         status_info, price_datas = [], []
-#         for product_code in tqdm(product_codes):
-#             price_data, status = sale.update_data(product_code, vertical)
-            
-#             status_info.append([product_code, status])
-#             price_datas += price_data
-        
-#         price_data_dict[vertical] = price_datas
-#         sale.__close__()
-#         print(f'{vertical} product status update 완료!')
-        
-#     return price_data_dict
-
 db_glamai = AccessDatabase('glamai')
 sale = UpdateProductSale()
 def update_sephora_sale(vertical):
