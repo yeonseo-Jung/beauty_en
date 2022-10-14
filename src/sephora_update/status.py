@@ -47,42 +47,20 @@ def get_status(url, item_no):
             if result is None:
                 pass
             else:
-                product_data = json.loads(result['page']['product']['productSeoJsonLd'])['offers']
+                try:
+                    product_data = json.loads(result['page']['product']['productSeoJsonLd'])['offers']
+                except Exception as e:
+                    print(f'\n\n\tError Message: {e}\n\turl: {url}\n\titem_no: {item_no}')
+                    product_data = []
                 for product in product_data:
                     if str(product['sku']) == item_no:
                         if product['availability'] == 'http://schema.org/OutOfStock':
-                            # print(url, item_no, 'OutOfStock')
                             pass
                         else:
                             is_use = 1
                             price = float(product['price'])
                         break
     return price, is_use
-
-# def update_sephora_status_all():
-#     verticals = ['face_base', 'eye', 'lip_color', 'moisturizers', 'cheek', 'treatments', 'masks', 'eye_care', 'body_care', 'mens', 'fragrance_men', 'fragrance_women', 'wellness', 'cleansers']
-#     for vertical in tqdm(verticals):
-#         table_name = f'{vertical}_product_info'
-#         info_df = db_glamai.get_tbl(table_name, ['product_code', 'item_no', 'url', 'price', 'regist_date'])
-#         info_df_dedup = info_df.drop_duplicates(subset=['product_code', 'item_no'], keep='first')
-#         info_status = []
-#         for info in tqdm(info_df_dedup.values):
-#             product_code = info[0]
-#             item_no = info[1]
-#             url = info[2]
-#             price_org = info[3]
-#             regist_date = info[4]
-#             price, is_use = get_status(url, item_no)
-#             update_date = datetime.today()
-#             if price is None:
-#                 price = price_org
-#             info_status.append([product_code, item_no, url, price, is_use, regist_date, update_date])
-            
-#         upload_table = f'sephora_{vertical}_data_status'
-#         columns = ['product_code', 'item_no', 'url', 'price', 'is_use', 'regist_date', 'update_date']
-#         upload_df = pd.DataFrame(info_status, columns=columns)
-        
-#         db_glamai.create_table(upload_df=upload_df, table_name=upload_table)
 
 def update_sephora_status(vertical):
     
@@ -110,7 +88,7 @@ def update_sephora_status(vertical):
 
 def main():
     status_data_dict = {}
-    verticals = ['face_base', 'eye', 'lip_color', 'moisturizers', 'cheek', 'treatments', 'masks', 'eye_care', 'body_care', 'mens', 'fragrance_men', 'fragrance_women', 'wellness', 'cleansers']
+    verticals = ['treatments', 'masks', 'eye_care', 'body_care', 'mens', 'fragrance_men', 'fragrance_women', 'wellness', 'cleansers', 'face_base', 'eye', 'lip_color', 'moisturizers', 'cheek']
     for vertical in tqdm(verticals):
         status_data_df = update_sephora_status(vertical)
         status_data_dict[vertical] = status_data_df
