@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from datetime import datetime
 
 import pymysql
@@ -15,6 +16,7 @@ else:
     sys.path.append(src)
     
 from database.access import AccessDatabase
+from crawling.crawler import json_iterator
 
 # sephora_refinement 테이블 클래스, 각 제품 별 어떤 특징 이 있는지 수집하는 부분, sephora_category_box의 내용 참고
 # 각 특징 별 어떤 상품이 걸리는지 수집하는 클래스
@@ -30,13 +32,6 @@ class Refinement():
         self.ds_conn.commit()
         self.ds_cur.close()
         self.ds_conn.close()
-
-    @staticmethod
-    def get_headers():
-        headers = {
-            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36"
-        }
-        return headers
 
     def get_refinement_data(self, vertical):
         sql = f"select * from sephora_category_box where mid_category = \"{vertical}\";"
@@ -68,28 +63,24 @@ class Refinement():
             url = f'https://www.sephora.com/api/catalog/categories/{cat}/products?ref={ref}&currentPage=1&pageSize=60&content=true&includeRegionsMap=true'
             # total_res = response.json()
             # total_product = total_res.get('totalProducts')
-            response = requests.get(url, headers=self.get_headers())
-            if response.status_code == 200:
-                total_product = response.json().get('totalProducts')
-            else:
-                print("response error from server ; ", str(response.content))
-
-            if not total_product:
+            res_data = json_iterator(url)
+            # total_product = response.json().get('totalProducts')
+            if res_data is None:
                 continue
+            total_product = res_data['totalProducts']
             last_page = int(total_product / 60) + 2
             for page in range(1, last_page):
                 # print("ref : ", ref, "cat : ", cat, "page : " , page)
                 url = f'https://www.sephora.com/api/catalog/categories/{cat}/products?ref={ref}&currentPage={page}&pageSize=60&content=true&includeRegionsMap=true'
                 # res = requests.get(url, headers=self.get_headers()).json()
                 # products = res.get('products')
-                res = requests.get(url, headers=self.get_headers())
-                if res.status_code == 200:
-                    products = res.json().get('products')
-                else:
-                    print("res error from server ; ", str(res.content))
-
-                if not products:
+                res_data = json_iterator(url)
+                if res_data is None:
                     break
+                try:
+                    products = res_data['products']
+                except KeyError:
+                    products = []
                 for product in products:
                     product_code = product['productId']
                     remain_check = remain_product.get(product_code, [])
