@@ -11,16 +11,10 @@ import sqlalchemy
     
 class AccessDatabase:
     
-    # def __init__(self, user_name, password, db_name, host_url="db.ds.mycelebs.com"):
-    #     self.user_name = user_name
-    #     self.password = password
-    #     self.db_name = db_name
-    #     self.host_url = host_url
-    
-    def __init__(self, user_name, password, db_name):
+    def __init__(self, db_name):
         self.host_url = 'db.ds.mycelebs.com'
-        self.user_name = user_name
-        self.password = password
+        self.user_name = 'yeonseosla'
+        self.password = 'jys9807'
         self.db_name = db_name
         
         self.today = datetime.today().strftime('%y%m%d')
