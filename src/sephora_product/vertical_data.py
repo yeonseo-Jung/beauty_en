@@ -345,120 +345,9 @@ class VerticalData:
         result['paypal_restrict'] = sku_data.get('isPaypalRestricted', 0)
 
         return result
-
-    # def get_product_info(self, product_code): # 100개 정도
-    #     url = f'https://www.sephora.com/api/catalog/products/{product_code}?preferedSku=&includeConfigurableSku=true'
-    #     # response = requests.get(url, headers=self.get_headers())
-    #     # if 'errorCode' in response.text:
-    #     #     print(product_code, 'error')
-    #     #     time.sleep(random.randint(5,10))
-    #     #     response = requests.get(url, headers=self.get_headers())
-    #     #     if 'errorCode' in response.text:
-    #     #         print(product_code, 'repeated error')
-    #     #         return None
-    #     product_list = []
-    #     global ymal_sku
-    #     global result
-    #     global response_data
-        
-    #     response_data = json_iterator(url)
-    #     if response_data is None:
-    #         return None
-    #     else:
-    #         pass
-        
-    #     try:
-    #         # response_data = response.json()
-    #         current_sku = response_data.get('currentSku')
-    #         result = self.get_sku_info(current_sku)
-    #         ymal_sku = response_data.get('ymalSkus')
-    #         use_with = ''
-    #     except Exception as e:
-    #         ymal_sku = False
-    #         print(e)
-    #         print('pass')
-    #     if ymal_sku:
-    #         use_with = []
-    #         for ymal in response_data.get('ymalSkus'):
-    #             use_with.append(ymal['productId'])
-    #         use_with = ','.join(use_with)
-
-    #     try:
-    #         result['brand'] = response_data.get('brand')['displayName']
-    #     except KeyError as ke:
-    #         print(ke)
-    #         pass
-
-    #     result['product_code'] = product_code
-    #     result['is_sale'] = response_data.get('onSaleSku', 0)
-    #     result['main_sku_check'] = 1
-
-    #     try:
-    #         result['use_with'] = use_with
-    #     except:
-    #         pass
-    #     result['like_count'] = response_data.get('lovesCount', 0)
-    #     result['review_count'] = response_data.get('reviews', 0)
-    #     result['what_it_is'] = response_data.get('quickLookDescription')
-    #     rating = response_data.get('rating', 0)
-    #     result['rating'] = round(rating * 2) / 2
-    #     result['product_name'] = response_data.get('displayName')
-    #     ## details 부분 추가
-    #     result['details'] = response_data.get('longDescription')
-    #     if response_data.get('longDescription') == None:
-    #         result['details'] = ""
-    #     else:
-    #         result['details'] = html.unescape(result['details']).replace("<b>", "").replace("</b>", "").replace("<br>",
-    #                                                                                                             "").replace(
-    #             "</br>", "").replace("\r", "").replace("\n", "").replace("\t", "")
-    #         result['details'] = re.sub('<.+?>', '', result['details'])
-    #     product_list.append(result)
-    #     sku_list = response_data.get('regularChildSkus')
-    #     if not sku_list:
-    #         sku_list = response_data.get('onSaleChildSkus', [])
-
-    #     for sku in sku_list:
-    #         result = self.get_sku_info(sku)
-    #         result['product_code'] = product_code
-    #         try:
-    #             result['brand'] = response_data.get('brand')['displayName']
-    #         except KeyError as ke:
-    #             print(ke)
-    #             pass
-    #         result['is_sale'] = response_data.get('onSaleSku', 0)
-    #         result['main_sku_check'] = 0
-    #         try:
-    #             result['use_with'] = use_with
-    #         except:
-    #             pass
-    #         result['like_count'] = response_data.get('lovesCount', 0)
-    #         result['review_count'] = response_data.get('reviews', 0)
-    #         result['what_it_is'] = response_data.get('quickLookDescription')
-    #         rating = response_data.get('rating', 0)
-    #         result['rating'] = round(rating * 2) / 2
-    #         result['product_name'] = response_data.get('displayName')
-    #         ## details 부분 추가
-    #         result['details'] = response_data.get('longDescription')
-    #         if response_data.get('longDescription') == None:
-    #             result['details'] == ""
-    #         else:
-    #             result['details'] = html.unescape(result['details']).replace("<b>", "").replace("</b>", "").replace(
-    #                 "<br>", "").replace("</br>", "").replace("\r", "").replace("\n", "").replace("\t", "")
-    #             result['details'] = re.sub('<.+?>', '', result['details'])
-    #         product_list.append(result)
-
-    #     return product_list
     
     def get_product_info(self, product_code): # 100개 정도
         url = f'https://www.sephora.com/api/catalog/products/{product_code}?preferedSku=&includeConfigurableSku=true'
-        # response = requests.get(url, headers=self.get_headers())
-        # if 'errorCode' in response.text:
-        #     print(product_code, 'error')
-        #     time.sleep(random.randint(5,10))
-        #     response = requests.get(url, headers=self.get_headers())
-        #     if 'errorCode' in response.text:
-        #         print(product_code, 'repeated error')
-        #         return None
         product_list = []
         global ymal_sku
         global result
@@ -869,23 +758,23 @@ class VerticalData:
         return keys
 
     def update_vertical_data(self):
-        # verticals = [
-        #     'eye', 'face_base', 'lip_color', 'moisturizers', 'Cheek', 'Brush & Applicators', 'Accessories',
-        #     'Treatments', 'Masks', 'Eye Care', 'Body Care', "Men's Bath & Body", 'Wellness',
-        #     'Hair Styling', 'Curly Hair Care', 'Hair Dye & Root Touch-Ups', 'Shampoo & Conditioner',
-        #     'Hair Treatments', 'Bath & Shower', 'Cleansers', 'fragrance women', 'fragrance men',
-        #     'candles & home scents', 'sun care (sunscreen)', 'self tanner', 'Makeup Brushes & Applicators',
-        #     'Accessories', 'Nail polish & Treatments', 'Hair tools'
-        # ]
-        
         verticals = [
-            'Curly Hair Care', 'Hair Dye & Root Touch-Ups', 'Shampoo & Conditioner',
+            'eye', 'face_base', 'lip_color', 'moisturizers', 'Cheek', 'Brush & Applicators', 'Accessories',
+            'Treatments', 'Masks', 'Eye Care', 'Body Care', "Men's Bath & Body", 'Wellness',
+            'Hair Styling', 'Curly Hair Care', 'Hair Dye & Root Touch-Ups', 'Shampoo & Conditioner',
             'Hair Treatments', 'Bath & Shower', 'Cleansers', 'fragrance women', 'fragrance men',
             'candles & home scents', 'sun care (sunscreen)', 'self tanner', 'Makeup Brushes & Applicators',
             'Accessories', 'Nail polish & Treatments', 'Hair tools'
         ]
+        
+        # verticals = [
+        #     'Curly Hair Care', 'Hair Dye & Root Touch-Ups', 'Shampoo & Conditioner',
+        #     'Hair Treatments', 'Bath & Shower', 'Cleansers', 'fragrance women', 'fragrance men',
+        #     'candles & home scents', 'sun care (sunscreen)', 'self tanner', 'Makeup Brushes & Applicators',
+        #     'Accessories', 'Nail polish & Treatments', 'Hair tools'
+        # ]
 
-        for vertical in tqdm(verticals):
+        for vertical in verticals:
             print('\n\n========================================')
             print(f'vertical: {vertical}')
             data_columns = self.get_columns(vertical)
@@ -893,13 +782,7 @@ class VerticalData:
             update_data = []
             remain_product = self.get_vertical_product(vertical)
             products = self.get_product_list(vertical)
-            counter = 0
             for product in tqdm(products):
-                # counter += 1
-                # if counter % 50 == 0:
-                #     time.sleep(random.uniform(5, 10))
-                # if counter % 500 == 0:
-                #     time.sleep(random.uniform(40, 60))
                 crawl_product_list = self.get_product_info(product['product_code'])
                 if crawl_product_list:
                    try:
@@ -937,7 +820,6 @@ class VerticalData:
                 update_sql += 'where item_no = %s'
                 update_chunk = [update_data[x: x + 200] for x in range(0, len(update_data), 50)]
                 print('length of update_data is : ', len(update_chunk))
-                print('========================================\n\n')
 
                 for chunk in tqdm(update_chunk):
                     try:
@@ -949,8 +831,10 @@ class VerticalData:
                         self.__conn__()
                         self.ds_cur.executemany(update_sql, chunk)
                     self.ds_conn.commit()
+                print('========================================\n\n')
+                    
             else:
                 continue
             
         self.__close__()
-        print("sephora_vertical_data 업데이트 완료")
+        print("sephora vertical data 업데이트 완료")

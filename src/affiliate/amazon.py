@@ -142,15 +142,15 @@ def _crawling(value):
         
     return data
 
-def _upload(data):
+def _upload(data, append=False):
     columns = ['product_code', 'item_no', 'affiliate_type', 'affiliate_image', 'regist_date', 'affiliate_url', 'page_status', 'avaliability_txt', 'price', 'sale_price', 'is_sale', 'is_use', 'price_']
     crawling_df = pd.DataFrame(data, columns=columns)
-
+    
     upload_columns = ['product_code', 'item_no', 'affiliate_type', 'affiliate_url', 'affiliate_image',  'price', 'sale_price', 'is_sale', 'is_use', 'regist_date']
     upload_df = crawling_df.loc[:, upload_columns]
     upload_df.loc[:, 'update_date'] = datetime.today()
     upload_df = upload_df.sort_values(by=['product_code', 'item_no', 'regist_date', 'update_date'], ignore_index=True)
-    db_jangho.create_table(upload_df=upload_df, table_name='affiliate_price_update_amazon')
+    db_jangho.create_table(upload_df=upload_df, table_name='affiliate_price_update_amazon', append=append)
     
     return crawling_df, upload_df
 
