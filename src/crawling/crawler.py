@@ -45,6 +45,7 @@ def get_url(url, window=False, image=False):
             options.add_argument("--disable-gpu")
             options.add_argument('--disable-extensions')
             options.add_argument(f'user-agent={userAgent}')
+            options.add_argument("--start-fullscreen")
             
             if not window:
                 options.add_argument('headless')

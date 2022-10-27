@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import json
-from fake_useragent import UserAgent
+from user_agent import generate_user_agent
 import sys
 import os
 from .logger import main
@@ -34,8 +34,8 @@ class GoogleWordCrawler:
         self.search_word = search_word
         self.session = requests.Session()
         url = 'https://www.google.com/search?&q=' + self.search_word
-        self.ua = UserAgent(verify_ssl=False)
-        headers_data = {'user-agent': self.ua.random}
+        self.ua = generate_user_agent(os=('mac', 'linux'), navigator='chrome', device_type='desktop')
+        headers_data = {'user-agent': self.ua}
         res = self.session.get(url, headers=headers_data)
         
         self.soup = BeautifulSoup(res.text, 'lxml')
@@ -63,7 +63,7 @@ class GoogleWordCrawler:
         
         url = 'https://www.google.com/complete/search?&q=' + str(self.search_word) + "&client=psy-ab"
         headers_data = {
-            'user-agent': self.ua.random,
+            'user-agent': self.ua,
             'cookie': cookie_string
         }
         response_data = self.session.get(url, headers=headers_data)
@@ -101,8 +101,8 @@ class YoutubeWordCrawler:
         self.search_word = search_word
         self.session = requests.Session()
         url = 'https://clients1.google.com/complete/search?client=youtube&hl=en&q=' + self.search_word
-        self.ua = UserAgent(verify_ssl=False)
-        headers_data = {'user-agent': self.ua.random }
+        self.ua = generate_user_agent(os=('mac', 'linux'), navigator='chrome', device_type='desktop')
+        headers_data = {'user-agent': self.ua }
         res = self.session.get(url, headers=headers_data)
         self.response = res.text
         self.youtube_crawled_data = []

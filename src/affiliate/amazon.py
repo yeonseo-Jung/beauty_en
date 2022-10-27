@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import time
 from datetime import datetime
 
 import pymysql
@@ -24,13 +25,19 @@ db_glamai = AccessDatabase('glamai')
 db_jangho = AccessDatabase('jangho')
 
 
-def get_data_amazon(url):
+def get_data_amazon(url, wd=None):
 
-    # wd = get_url(url)
-    wd = get_url(url)
+    if wd is None:
+        wd = get_url(url)
+    else:
+        pass
     soup = BeautifulSoup(wd.page_source, 'lxml')
     if soup is None:
         print("soup is None")
+        wd.quit()
+        return None
+    elif soup.find('div', 'a-box a-color-offset-background') is not None:
+        print("\n\nEnter the characters you see below\nSorry, we just need to make sure you're not a robot.\nFor best results, please make sure your browser is accepting cookies.\n\n")
         wd.quit()
         return None
     else:    
@@ -122,25 +129,43 @@ def get_data_amazon(url):
     
 def get_data():
     df_price = db_glamai.get_tbl('affiliate_price')
-    df_amazon = df_price[df_price.affiliate_type=='amazon']
+    df_amazon = df_price[df_price.affiliate_type=='amazon'].reset_index(drop=True)
     
     return df_amazon
     
-def _crawling(value):
-    product_code = value[0]
-    item_no = value[1]
-    affiliate_type = 'amazon'
-    affiliate_url = value[3]
-    affiliate_image = value[4]
-    regist_date = value[9]
+# def _crawling(value):
+#     product_code = value[0]
+#     item_no = value[1]
+#     affiliate_type = 'amazon'
+#     affiliate_url = value[3]
+#     affiliate_image = value[4]
+#     regist_date = value[9]
     
-    data = get_data_amazon(affiliate_url)
-    if data is None:
-        pass
-    else:
-        data = [product_code, item_no, affiliate_type, affiliate_image, regist_date] + data
+#     data = get_data_amazon(affiliate_url)
+#     if data is None:
+#         pass
+#     else:
+#         data = [product_code, item_no, affiliate_type, affiliate_image, regist_date] + data
         
-    return data
+#     return data
+
+def _crawling(df):
+    product_code = df.product_code
+    item_no = df.item_no
+    affiliate_type = 'amazon'
+    affiliate_url = df.affiliate_url
+    affiliate_image = df.affiliate_image
+    regist_date = df.regist_date
+    
+    crawled = get_data_amazon(affiliate_url)
+    while crawled is None:
+        wd = get_url(affiliate_url, window=True, image=True)
+        time.sleep(100)
+        crawled = get_data_amazon(affiliate_url, wd)
+    
+    updated = [product_code, item_no, affiliate_type, affiliate_image, regist_date] + crawled
+    
+    return updated
 
 def _upload(data, append=False):
     columns = ['product_code', 'item_no', 'affiliate_type', 'affiliate_image', 'regist_date', 'affiliate_url', 'page_status', 'avaliability_txt', 'price', 'sale_price', 'is_sale', 'is_use', 'price_']
@@ -154,17 +179,33 @@ def _upload(data, append=False):
     
     return crawling_df, upload_df
 
-def main():
+# def update_affiliate_amazon():
+#     df_amazon = get_data()
+#     datas, error = [], []
+#     for value in tqdm(df_amazon.values):
+#         data = _crawling(value)
+#         if data is None:
+#             affiliate_url = value[3]
+#             error.append(affiliate_url)
+#         else:
+#             datas.append(data)
+#     crawling_df, upload_df = _upload(datas)
+    
+def update_affiliate_amazon():
     df_amazon = get_data()
-    datas, error = [], []
-    for value in tqdm(df_amazon.values):
-        data = _crawling(value)
-        if data is None:
-            affiliate_url = value[3]
+    _updated, error = [], []
+    for idx in range(len(df_amazon)):
+        df = df_amazon.loc[idx]
+        updated = _crawling(df)
+        if updated is None:
+            affiliate_url = df.affiliate_url
             error.append(affiliate_url)
         else:
-            datas.append(data)
-    crawling_df, upload_df = _upload(datas)
+            _updated.append(updated)
+            
+    crawling_df, upload_df = _upload(_updated)
+
+    return crawling_df, upload_df
     
 if __name__ == '__main__':
-    main()
+    crawling_df, upload_df = update_affiliate_amazon()

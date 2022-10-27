@@ -71,25 +71,6 @@ class ReviewData:
             product_id = rev_data.get('ProductId')
             positive_count = rev_data.get('TotalPositiveFeedbackCount')
             return [product_code, product_id, rating, skin_type, eye_color, skin_concerns, hair_color, skin_tone, age, title, txt_data, positive_count]
-
-    # def _iterator(self, url, iterations=5):
-        
-    #     cnt = 0
-    #     while cnt <= iterations:
-    #         try:
-    #             res = requests.get(url)
-    #             res_data = json.loads(res.text)
-    #             break
-    #         except json.JSONDecodeError as e:
-    #             pass
-    #         except Exception as e:
-    #             pass
-    #         print(f'Error: {e}')
-    #         res_data = None
-    #         cnt += 1
-    #         time.sleep(100)
-    
-    #     return res_data
                     
     def _crawling(self, backup=True):
         
@@ -211,6 +192,10 @@ class ReviewDate:
         return result
     
 if __name__=='__main__':
-    txt_data, error = ReviewData()._crawling()
+    rev = ReviewData()
+    txt_data, error = rev._crawling()
+    
     time.sleep(100)
-    result = ReviewDate().update_review_date()
+    
+    revdate = ReviewDate()
+    result = revdate.update_review_date()
