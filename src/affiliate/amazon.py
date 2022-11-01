@@ -194,7 +194,7 @@ def _upload(data, append=False):
 def update_affiliate_amazon():
     df_amazon = get_data()
     _updated, error = [], []
-    for idx in range(len(df_amazon)):
+    for idx in tqdm(range(len(df_amazon))):
         df = df_amazon.loc[idx]
         updated = _crawling(df)
         if updated is None:
