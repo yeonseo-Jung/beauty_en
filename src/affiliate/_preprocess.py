@@ -31,7 +31,6 @@ class TitlePreProcess:
         num_0 = re.compile('[a-z]*\s*[0-9]+\s*호')
         num_1 = re.compile('#\s*[a-z]*\s*[0-9]+')
         num_2 = re.compile('[n]+[o]+[.]?\s*[0-9]+')
-        # n_in_one = re.compile('[0-9]+\s?in\s?[0-9]+')
         self.keep_wd_reg = [spf, pa, volume_ml, volume_kg, volume_oz, num_0, num_1, num_2]
         self.keep_wd_list = ['spf', 'pa', 'volume_ml', 'volume_kg', 'volume_oz', 'num_0', 'num_1', 'num_2']
 
@@ -176,16 +175,15 @@ class TitlePreProcess:
         else:
             title_1 = self.remove_stp_pattern(title_0)
 
-        '''토큰 중복 제거'''
         if str(title_1) == 'nan':
             return title_0, keep_wd_dict
         else:
-            title_2 = self.remove_dup_words(title_1)
+            title_1, keep_wd_dict
         
-        if str(title_2) == 'nan':
-            return title_1, keep_wd_dict
-        else:
-            return title_2, keep_wd_dict
+        # if str(title_2) == 'nan':
+        #     return title_1, keep_wd_dict
+        # else:
+        #     return title_2, keep_wd_dict
         
 tp = TitlePreProcess()
 def preprocess_titles(df):
