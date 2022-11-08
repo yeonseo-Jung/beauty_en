@@ -86,9 +86,7 @@ def update_sephora_status(vertical):
     db_glamai.create_table(upload_df=upload_df, table_name=upload_table)
     return upload_df
 
-def main():
-    status_data_dict = {}
+if __name__ == '__main__':
     verticals = ['treatments', 'masks', 'eye_care', 'body_care', 'mens', 'fragrance_men', 'fragrance_women', 'wellness', 'cleansers', 'face_base', 'eye', 'lip_color', 'moisturizers', 'cheek']
     for vertical in tqdm(verticals):
         status_data_df = update_sephora_status(vertical)
-        status_data_dict[vertical] = status_data_df

@@ -158,7 +158,7 @@ class TitlePreProcess:
         
         title = str(title).lower()
         brand = str(brand).lower()
-        title_ = title.replace('해외', ' ').replace('단종', ' ').replace(brand, ' ')
+        title_ = title.replace(brand, ' ')
         title_ = re.sub(' +', ' ', title_).strip()
 
         '''상품명에서 상품 정보 추출'''
@@ -185,19 +185,19 @@ class TitlePreProcess:
         # else:
         #     return title_2, keep_wd_dict
         
-tp = TitlePreProcess()
-def preprocess_titles(df):
-    preprocessed = []
-    for idx in tqdm(df.index):
-        title = df.loc[idx, 'product_name']
-        brand = df.loc[idx, 'brand']
-        _title, keep_wds = tp.title_preprocessor(title, brand)
+# tp = TitlePreProcess()
+# def preprocess_titles(df):
+#     preprocessed = []
+#     for idx in tqdm(df.index):
+#         title = df.loc[idx, 'product_name']
+#         brand = df.loc[idx, 'brand']
+#         _title, keep_wds = tp.title_preprocessor(title, brand)
         
-        preprocessed.append([_title, keep_wds])
-    preprocessed_df = pd.DataFrame(preprocessed, columns=['preprocessed', 'keep_wds'])
-    df_concat = pd.concat([df, preprocessed_df.loc[:, ['preprocessed', 'keep_wds']]], axis=1)
+#         preprocessed.append([_title, keep_wds])
+#     preprocessed_df = pd.DataFrame(preprocessed, columns=['preprocessed', 'keep_wds'])
+#     df_concat = pd.concat([df, preprocessed_df.loc[:, ['preprocessed', 'keep_wds']]], axis=1)
     
-    return df_concat
+#     return df_concat
 
 # preprocessed_df = preprocess_titles(df)
 # for idx in preprocessed_df.index:

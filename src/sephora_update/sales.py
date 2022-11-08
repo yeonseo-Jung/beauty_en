@@ -204,11 +204,7 @@ def update_sephora_sale(vertical):
 
     return price_datas
 
-def main():
-    price_data_dict = {}
+if __name__ == '__main__':
     verticals = ['face_base', 'eye', 'lip_color', 'moisturizers', 'cheek', 'treatments', 'masks', 'eye_care', 'body_care', 'mens', 'fragrance_men', 'fragrance_women', 'wellness', 'cleansers']
     for vertical in tqdm(verticals):
         price_data = update_sephora_sale(vertical)
-        price_data_dict[vertical] = price_data
-        
-    return price_data_dict

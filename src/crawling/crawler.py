@@ -22,20 +22,20 @@ from webdriver_manager.chrome import ChromeDriverManager
 # from selenium.webdriver.support import expected_conditions as EC
 # from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException, NoSuchElementException, TimeoutException
 
-# Exception Error Handling
+# # Exception Error Handling
 import socket
-import warnings
-warnings.filterwarnings("ignore")
+# import warnings
+# warnings.filterwarnings("ignore")
 
 def get_url(url, window=False, image=False):
     ''' Set up webdriver, useragent & Get url '''
     
     wd = None
     socket.setdefaulttimeout(30)
-    error = []
-    attempts = 0 # url parsing 시도횟수
-    # 10번 이상 parsing 실패시 pass
-    while attempts < 10:
+    # url parsing 시도횟수
+    attempts = 0 
+    # 5회 이상 parsing 실패시 pass
+    while attempts < 5:
         try:  
             attempts += 1
             # user agent
@@ -62,7 +62,7 @@ def get_url(url, window=False, image=False):
         except Exception as e:
             print(f'\n\nError: {str(e)}\n\n')
             
-            time.sleep(300)
+            time.sleep(100)
             try:
                 wd.quit()
             except:
