@@ -1,5 +1,6 @@
 # test code
 _test.ipynb
+test.ipynb
 
 # ds
 .DS_Store
@@ -10,5 +11,9 @@ __pycache__/
 # venv
 venv
 
-# test
-test.ipynb
+# docs
+tbl_cache/
+*.csv
+
+# vscode
+.vscode/
