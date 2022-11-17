@@ -43,6 +43,9 @@ errors = Errors()
 _date = datetime.today().strftime("%y%m%d")
 print(f'Today is {_date}')
 
+if not os.path.isdir(tbl_cache):
+    os.mkdir(tbl_cache)
+
 def dup_check(df, subset):
     
     return df[df.duplicated(subset=subset, keep=False)].sort_values(by=subset, ignore_index=True)
@@ -357,6 +360,11 @@ if __name__ == '__main__':
     v_df_dedup = variant_df.drop_duplicates('pk', ignore_index=True)
     v_df_dedup.loc[:, 'url'] = 'https://walmart.com' + v_df_dedup.loc[:, 'canonicalUrl']
     
+    # _date = '221116'
+    # tbl_name = f'walmart_variant_data_{_date}'
+    # v_df_dedup = db_jangho.get_tbl(tbl_name)
+    # v_df_dedup = variant_df.drop_duplicates('pk', ignore_index=True)
+    # v_df_dedup.loc[:, 'url'] = 'https://walmart.com' + v_df_dedup.loc[:, 'canonicalUrl']
     
     # Crawling variant data
     df_list = []
