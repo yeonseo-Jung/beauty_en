@@ -56,7 +56,7 @@ def get_data_amazon(url, wd=None):
                 avaliability_txt = None
             else:
                 avaliability = soup.find('div', {'id': 'availability'})
-                avaliability_txt = avaliability.find('span').text.strip()
+                avaliability_txt = avaliability.text.strip()
 
             # Check price
             if soup.find('div', 'a-section a-spacing-none aok-align-center') is not None:
@@ -132,22 +132,6 @@ def get_data():
     df_amazon = df_price[df_price.affiliate_type=='amazon'].reset_index(drop=True)
     
     return df_amazon
-    
-# def _crawling(value):
-#     product_code = value[0]
-#     item_no = value[1]
-#     affiliate_type = 'amazon'
-#     affiliate_url = value[3]
-#     affiliate_image = value[4]
-#     regist_date = value[9]
-    
-#     data = get_data_amazon(affiliate_url)
-#     if data is None:
-#         pass
-#     else:
-#         data = [product_code, item_no, affiliate_type, affiliate_image, regist_date] + data
-        
-#     return data
 
 def _crawling(df):
     product_code = df.product_code
@@ -178,18 +162,6 @@ def _upload(data, append=False):
     db_jangho.create_table(upload_df=upload_df, table_name='affiliate_price_update_amazon', append=append)
     
     return crawling_df, upload_df
-
-# def update_affiliate_amazon():
-#     df_amazon = get_data()
-#     datas, error = [], []
-#     for value in tqdm(df_amazon.values):
-#         data = _crawling(value)
-#         if data is None:
-#             affiliate_url = value[3]
-#             error.append(affiliate_url)
-#         else:
-#             datas.append(data)
-#     crawling_df, upload_df = _upload(datas)
     
 def update_affiliate_amazon():
     df_amazon = get_data()

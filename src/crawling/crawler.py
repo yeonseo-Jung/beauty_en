@@ -105,8 +105,8 @@ def json_iterator(url, iterations=5, headers=True):
             res_data = json.loads(res.text)
             break
         except Exception as e:
-            print(f'Error: {e}')
+            print(f'\n\nError: {e}\nStatus Code: {res.status_code}')
         cnt += 1
-        time.sleep(100)
+        time.sleep(60)
         
     return res_data

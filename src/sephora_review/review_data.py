@@ -18,6 +18,9 @@ else:
 from crawling.crawler import json_iterator
 from database.access import AccessDatabase
 
+tbl_cache = os.path.join(root, 'tbl_cache')
+_date = datetime.datetime.today().strftime("%y%m%d")
+
 class ReviewData:
     def __init__(self):
         self.__conn__()
@@ -52,8 +55,7 @@ class ReviewData:
             txt_data = rev_data.get('ReviewText')
             if title:
                 txt_data = title + ' ' + txt_data
-            else:
-                pass
+
             rating = rev_data.get('Rating', 0)
             context_data = rev_data.get('ContextDataValues', {})
             skin_type_raw = context_data.get('skinType', {})
@@ -78,8 +80,6 @@ class ReviewData:
             # table backup
             db_glamai = AccessDatabase('glamai')
             db_glamai._backup(table_name='sephora_txt_data_re', keep=True)
-        else:
-            pass
         
         now = datetime.datetime.today()
         product_list = self.get_review_max_date()
@@ -92,9 +92,9 @@ class ReviewData:
             
             review_data = json_iterator(url)
             if review_data is None:
+                note = "url parsing faild"
+                error.append([product_code, url, note])
                 continue
-            else:
-                pass
                     
             review_cnt = review_data.get('TotalResults', 0)
             if not review_cnt:
@@ -103,15 +103,16 @@ class ReviewData:
                 error.append([product_code, url, note])
                 continue
             end_point = int(review_cnt / 100) + 1
+            
             result = []
             for point in range(end_point):
                 url = f'https://api.bazaarvoice.com/data/reviews.json?Filter=ProductId%3A{product_code}&Sort=SubmissionTime%3Adesc&Limit=100&Offset={str(100 * point)}&Include=Products%2CComments&Stats=Reviews&passkey=rwbw526r2e7spptqd2qzbkp7&apiversion=5.4'
                 
                 review_data = json_iterator(url)
                 if review_data is None:
+                    note = "url pasing faild"
+                    error.append([product_code, url, note])
                     continue
-                else:
-                    pass
                 
                 flag = False
                 reviews = review_data['Results']

@@ -262,20 +262,39 @@ class AccessDatabase:
                                                 `regist_date` datetime DEFAULT NULL,\
                                                 `update_date` datetime DEFAULT NULL\
                                                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
+        
+        'sephora_to_walmart_mapped': f"CREATE TABLE `sephora_to_walmart_mapped` (\
+                                                `pk` int(11) unsigned NOT NULL AUTO_INCREMENT,\
+                                                `product_code` varchar(20),\
+                                                `item_no` int(11),\
+                                                `affiliate_type` varchar(20),\
+                                                `affiliate_url` text,\
+                                                `affiliate_image` varchar(255),\
+                                                `usItemId` varchar(20),\
+                                                `price` float(7,2),\
+                                                `sale_price` float(7,2),\
+                                                `is_sale` tinyint(1),\
+                                                `is_use` tinyint(1),\
+                                                `dedup` tinyint(1),\
+                                                `regist_date` datetime DEFAULT NULL,\
+                                                `update_date` datetime DEFAULT NULL,\
+                                                PRIMARY KEY (`pk`)\
+                                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
+                                                
                                                     
-            'glamai_youtube_urls': f"CREATE TABLE `glamai_youtube_urls` (\
-                                    `gy_pk` int(11) NOT NULL AUTO_INCREMENT,\
-                                    `product_code` varchar(255) DEFAULT NULL,\
-                                    `thumbnail` varchar(255) DEFAULT NULL,\
-                                    `title` varchar(255) DEFAULT NULL,\
-                                    `yt_id` varchar(255) DEFAULT NULL,\
-                                    `yt_url` varchar(255) DEFAULT NULL,\
-                                    `duration` varchar(255) DEFAULT NULL,\
-                                    `youtuber` varchar(255) NOT NULL DEFAULT '',\
-                                    `regist_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-                                    PRIMARY KEY (`gy_pk`),\
-                                    KEY `product_code` (`product_code`)\
-                                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+        'glamai_youtube_urls': f"CREATE TABLE `glamai_youtube_urls` (\
+                                `gy_pk` int(11) NOT NULL AUTO_INCREMENT,\
+                                `product_code` varchar(255) DEFAULT NULL,\
+                                `thumbnail` varchar(255) DEFAULT NULL,\
+                                `title` varchar(255) DEFAULT NULL,\
+                                `yt_id` varchar(255) DEFAULT NULL,\
+                                `yt_url` varchar(255) DEFAULT NULL,\
+                                `duration` varchar(255) DEFAULT NULL,\
+                                `youtuber` varchar(255) NOT NULL DEFAULT '',\
+                                `regist_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\
+                                PRIMARY KEY (`gy_pk`),\
+                                KEY `product_code` (`product_code`)\
+                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
         }
         if vertical is None:
             if table_name in list(query_dict.keys()):

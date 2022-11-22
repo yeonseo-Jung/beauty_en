@@ -106,7 +106,6 @@ class TitlePreProcess:
         #     title = pattern.sub(' ', title)
 
         # '''상품명에서 한글, 영문, 숫자, .만 추출'''
-        title = title.replace('á', 'a').replace('é', 'e').replace('ô', 'o')
         title = re.sub('[^a-z0-9.]', ' ', title)
         title = re.sub(' +', ' ', title)
         title = title.strip()
@@ -158,6 +157,8 @@ class TitlePreProcess:
         
         title = str(title).lower()
         brand = str(brand).lower()
+        title = title.replace('á', 'a').replace('é', 'e').replace('ô', 'o')
+        brand = brand.replace('á', 'a').replace('é', 'e').replace('ô', 'o')
         title_ = title.replace(brand, ' ')
         title_ = re.sub(' +', ' ', title_).strip()
 
@@ -178,7 +179,7 @@ class TitlePreProcess:
         if str(title_1) == 'nan':
             return title_0, keep_wd_dict
         else:
-            title_1, keep_wd_dict
+            return title_1, keep_wd_dict
         
         # if str(title_2) == 'nan':
         #     return title_1, keep_wd_dict
