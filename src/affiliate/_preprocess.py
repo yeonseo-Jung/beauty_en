@@ -214,3 +214,42 @@ class TitlePreProcess:
 #         \n\t * Preprocessed title : {preprocessed}\
 #         \n\t * keep words         : {keep_wds}'
 #     )
+
+tp = TitlePreProcess()
+def preprocess_titles(df: pd.DataFrame) -> pd.DataFrame:
+    '''상품명, 브랜드명 전처리 함수
+    필수 컬럼: "product_name", "brand"
+    '''
+    
+    preprocessed = []
+    for idx in tqdm(df.index):
+        title = df.loc[idx, 'product_name']
+        brand = df.loc[idx, 'brand']
+        _title, keep_wds = tp.title_preprocessor(title, brand)
+        
+        # preprocessed.append([_title, keep_wds])
+        df.loc[idx, 'preprocessed'] = _title
+        for key in keep_wds.keys():
+            df.loc[idx, key] = keep_wds[key]
+    
+    return df
+
+# 중복 구하기
+def dup_check(df, subset, keep=False, sorting=False):
+    
+    if sorting:    
+        return df[df.duplicated(subset=subset, keep=keep)].sort_values(by=subset, ignore_index=True)
+    else:
+        return df[df.duplicated(subset=subset, keep=keep)].reset_index(drop=True)
+    
+def subtractor(df_a, df_b, subset):
+    # 차집합 구하기: df_a - df_b 
+
+    # 중복값 구하기
+    dup_df = dup_check(pd.concat([df_a, df_b]), subset=subset)
+    dedup_df = dup_df.drop_duplicates(subset=subset, keep='first')
+
+    # 차집합 
+    subtract_df = pd.concat([df_a, dedup_df]).drop_duplicates(subset=subset, keep=False)
+    
+    return subtract_df

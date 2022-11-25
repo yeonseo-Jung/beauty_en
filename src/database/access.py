@@ -18,7 +18,7 @@ class AccessDatabase:
         self.db_name = db_name
         
         self.today = datetime.today().strftime('%y%m%d')
-        
+    
     def _connect(self):
         ''' db connect '''
             
@@ -31,9 +31,12 @@ class AccessDatabase:
     def _execute(self, query):
         conn, curs = self._connect()
         curs.execute(query)
+        data = curs.fetchall()
         conn.commit()
         curs.close()
         conn.close()
+        
+        return data
         
     def _insert(self, table: str, fields: tuple, values: tuple) -> None:
         _fields = ''

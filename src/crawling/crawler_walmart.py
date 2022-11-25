@@ -302,7 +302,7 @@ def get_variants(product):
 
 def get_options(product):
     variantsMap = product['variantsMap']
-    variantsMapKeys = variantsMap.keys() 
+    variantsMapKeys = variantsMap.keys()
 
     variants_data = [] 
     for key in variantsMapKeys:

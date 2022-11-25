@@ -119,6 +119,10 @@ def get_data_amazon(url, wd=None):
                         _price_normal = price_normal
                         price_normal = price_sale
                         price_sale = _price_normal
+            
+            elif soup.find('table', 'a-lineitem') is not None:
+                price_area = soup.find('table', 'a-lineitem')
+                is_use = 2
     
             else:
                 is_use, is_sale = -1, -1
