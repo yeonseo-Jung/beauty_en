@@ -16,7 +16,7 @@ else:
     sys.path.append(src)
 
 from crawling.crawler import json_iterator
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 
 tbl_cache = os.path.join(root, 'tbl_cache')
 _date = datetime.datetime.today().strftime("%y%m%d")

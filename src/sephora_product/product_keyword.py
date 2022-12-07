@@ -14,7 +14,7 @@ else:
     src  = os.path.join(root, 'src')
     sys.path.append(src)
     
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 
 # sephora_product_keyword 채우는 클래스, 어떤 sub_category에 어떤 제품이 있는지 수집
 class ProductKeyword:

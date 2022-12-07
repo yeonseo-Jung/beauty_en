@@ -1,16 +1,27 @@
+import os
+import sys
 import pymysql
 import datetime
 from sqlalchemy import create_engine
 
 
-host_url = 'db.ds.mycelebs.com'
-username = 'yeonseosla'
-passwd = 'jys9807'
-port_num = 3306
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    root = sys._MEIPASS
+else:
+    cur_dir = os.path.dirname(os.path.realpath(__file__))
+    root = os.path.abspath(os.path.join(cur_dir, os.pardir, os.pardir))
+    src  = os.path.join(root, 'src')
+    sys.path.append(src)
+    
+from database.constants import Connect
+conn = Connect()
+host_url = conn.host_url
+username = conn.user_name
+passwd = conn.password
+port_num = conn.port_num
 
-
-def get_connection(host_name, db_name):
-    conn = pymysql.connect(host=host_name,
+def get_connection(host_url, db_name):
+    conn = pymysql.connect(host=host_url,
                            user=username,
                            passwd=passwd,
                            db=db_name,
@@ -42,7 +53,7 @@ def truncate_table(db_name, table_name):
 
 
 def backup_table(db_name, table_name):
-    backup_table_name = table_name + "_backup_" + datetime.datetime.now().strftime("%y%m%d")
+    backup_table_name = table_name + "_bak_" + datetime.datetime.now().strftime("%y%m%d")
     conn = get_connection_to_mycelebs(db_name)
     cur = conn.cursor()
     backup_qry = f"CREATE TABLE {backup_table_name} SELECT * FROM {table_name};"

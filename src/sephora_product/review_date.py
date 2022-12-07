@@ -10,7 +10,7 @@ else:
     src  = os.path.join(root, 'src')
     sys.path.append(src)
 
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 
 class ReviewDate:
     def __init__(self):

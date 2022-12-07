@@ -18,7 +18,7 @@ else:
     src  = os.path.join(root, 'src')
     sys.path.append(src)
     
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 from crawling.crawler import json_iterator
 
 # sephora_{vertical}_data 의 주요 내용을 채우는 클래스, 업데이트 시 항상 sephora_product/product_keyword.py/ProductKeyword() 완료 후 실행
@@ -766,14 +766,6 @@ class VerticalData:
             'candles & home scents', 'sun care (sunscreen)', 'self tanner', 'Makeup Brushes & Applicators',
             'Accessories', 'Nail polish & Treatments', 'Hair tools'
         ]
-        
-        # verticals = [
-        #     'Curly Hair Care', 'Hair Dye & Root Touch-Ups', 'Shampoo & Conditioner',
-        #     'Hair Treatments', 'Bath & Shower', 'Cleansers', 'fragrance women', 'fragrance men',
-        #     'candles & home scents', 'sun care (sunscreen)', 'self tanner', 'Makeup Brushes & Applicators',
-        #     'Accessories', 'Nail polish & Treatments', 'Hair tools'
-        # ]
-
         for vertical in verticals:
             print('\n\n========================================')
             print(f'vertical: {vertical}')
@@ -819,7 +811,7 @@ class VerticalData:
 
                 update_sql += 'where item_no = %s'
                 update_chunk = [update_data[x: x + 200] for x in range(0, len(update_data), 50)]
-                print('length of update_data is : ', len(update_chunk))
+                print('length of update_data is: ', len(update_chunk))
 
                 for chunk in tqdm(update_chunk):
                     try:

@@ -11,7 +11,7 @@ else:
     cur_dir = os.path.dirname(os.path.realpath(__file__))
     root = os.path.abspath(os.path.join(cur_dir, os.pardir))
 
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 tbl_cache = os.path.join(root, 'tbl_cache')
 conn_path = os.path.join(root, 'conn.txt')
 

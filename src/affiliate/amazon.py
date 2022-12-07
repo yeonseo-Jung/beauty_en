@@ -19,11 +19,10 @@ else:
     src  = os.path.join(root, 'src')
     sys.path.append(src)
 
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 from crawling.crawler import get_url
 db_glamai = AccessDatabase('glamai')
 db_jangho = AccessDatabase('jangho')
-
 
 def get_data_amazon(url, wd=None):
 

@@ -3,8 +3,8 @@ import re
 import sys
 import json
 import time
-import requests
 from datetime import datetime
+import requests
 from tqdm.auto import tqdm
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
@@ -15,7 +15,7 @@ else:
     src  = os.path.join(root, 'src')
     sys.path.append(src)
     
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 from crawling.crawler import json_iterator
 
 class UpdateProductSale:

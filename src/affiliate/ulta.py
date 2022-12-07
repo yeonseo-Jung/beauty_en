@@ -21,8 +21,8 @@ else:
     src  = os.path.join(root, 'src')
     sys.path.append(src)
 
-from database.access import AccessDatabase
 from crawling.crawler import get_url
+from database.conn import AccessDatabase
 db_glamai = AccessDatabase('glamai')
 db_jangho = AccessDatabase('jangho')
 

@@ -15,7 +15,7 @@ else:
     src  = os.path.join(root, 'src')
     sys.path.append(src)
     
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 from crawling.crawler import json_iterator
 
 # sephora_refinement 테이블 클래스, 각 제품 별 어떤 특징 이 있는지 수집하는 부분, sephora_category_box의 내용 참고

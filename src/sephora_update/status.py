@@ -16,17 +16,9 @@ else:
     src  = os.path.join(root, 'src')
     sys.path.append(src)
     
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 from crawling.crawler import get_headers
 db_glamai = AccessDatabase('glamai')
-
-# def get_headers():
-#     userAgent = generate_user_agent(os=('mac', 'linux'), navigator='chrome', device_type='desktop')
-#     headers = {
-#         "user-agent": userAgent,
-#         "Accept": "application/json",
-#     }
-#     return headers
 
 def get_status(url, item_no):
     item_no = str(item_no)

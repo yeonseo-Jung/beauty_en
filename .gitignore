@@ -17,3 +17,6 @@ tbl_cache/
 
 # vscode
 .vscode/
+
+# .py
+constants.py

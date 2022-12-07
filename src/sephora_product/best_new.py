@@ -19,7 +19,7 @@ else:
     src  = os.path.join(root, 'src')
     sys.path.append(src)
     
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 
 
 # sephora 베스트셀러 / 신규상품 랭킹 구하는 코드

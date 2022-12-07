@@ -8,13 +8,24 @@ import pandas as pd
 # db connection 
 import pymysql
 import sqlalchemy
+
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    root = sys._MEIPASS
+else:
+    cur_dir = os.path.dirname(os.path.realpath(__file__))
+    root = os.path.abspath(os.path.join(cur_dir, os.pardir, os.pardir))
+    src  = os.path.join(root, 'src')
+    sys.path.append(src)
     
+from database.constants import Connect
+conn = Connect()
 class AccessDatabase:
     
     def __init__(self, db_name):
-        self.host_url = 'db.ds.mycelebs.com'
-        self.user_name = 'yeonseosla'
-        self.password = 'jys9807'
+        self.host_url = conn.host_url
+        self.user_name = conn.user_name
+        self.password = conn.password
+        self.port_num = conn.port_num
         self.db_name = db_name
         
         self.today = datetime.today().strftime('%y%m%d')
@@ -22,8 +33,7 @@ class AccessDatabase:
     def _connect(self):
         ''' db connect '''
             
-        port_num = 3306
-        conn = pymysql.connect(host=self.host_url, user=self.user_name, passwd=self.password, port=port_num, db=self.db_name, charset='utf8')
+        conn = pymysql.connect(host=self.host_url, user=self.user_name, passwd=self.password, port=self.port_num, db=self.db_name, charset='utf8')
         curs = conn.cursor(pymysql.cursors.DictCursor)
         
         return conn, curs
@@ -147,8 +157,7 @@ class AccessDatabase:
     def engine_upload(self, upload_df, table_name, if_exists_option="append"):
         ''' Create Table '''
         
-        port_num = 3306
-        engine = sqlalchemy.create_engine(f'mysql+pymysql://{self.user_name}:{self.password}@{self.host_url}:{port_num}/{self.db_name}?charset=utf8')
+        engine = sqlalchemy.create_engine(f'mysql+pymysql://{self.user_name}:{self.password}@{self.host_url}:{self.port_num}/{self.db_name}?charset=utf8')
         
         # Create table or Replace table 
         upload_df.to_sql(table_name, engine, if_exists=if_exists_option, index=False)

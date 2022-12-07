@@ -32,7 +32,7 @@ else:
     src  = os.path.join(root, 'src')
     sys.path.append(src)
 
-from database.access import AccessDatabase
+from database.conn import AccessDatabase
 from crawling.crawler import get_url, json_iterator, get_headers
 from errors import Errors
 tbl_cache = os.path.join(root, 'tbl_cache')
@@ -118,17 +118,11 @@ def get_items(brand, end_page=25):
     return itemsList
 
 def get_brands():
-    # get brands to glamai_data
-    # brands = db_jangho.get_tbl('glamai_data', ['brand']).brand.unique()
     
+    # 글램아이 전체 브랜드 가져오기
     df = db_jangho.get_tbl('glamai_data', ['product_code', 'brand'])
     brands_df = df.groupby('brand').count().sort_values('product_code', ascending=False)
-    # # 글램아이 전체 브랜드
     brands = brands_df.index
-    
-    # # 개체 수 10개 이상 존재하는 브랜드 추출
-    # brands_df_10 = brands_df[brands_df.product_code >= 10]
-    # brands = brands_df_10.index
 
     preprocessed_b = []
     for brand_sephora in brands:
@@ -336,14 +330,10 @@ def crawling_options(url, pk, product_name=None, brand=None):
             v_items_df_mer.loc[:, 'pk'] = pk
             return v_items_df_mer
         
-        
-if __name__ == '__main__':
+def update():
     brands = get_brands()
     
-    ## Test
-    # 개체 수 상위 15개 수집
-    # brands = brands[:15]
-    
+    # Crawling item data
     items_dict = crawling_items(brands)
     item_df, variant_df = scraping_items(items_dict)
     
@@ -360,11 +350,7 @@ if __name__ == '__main__':
     v_df_dedup = variant_df.drop_duplicates('pk', ignore_index=True)
     v_df_dedup.loc[:, 'url'] = 'https://walmart.com' + v_df_dedup.loc[:, 'canonicalUrl']
     
-    # _date = '221116'
-    # tbl_name = f'walmart_variant_data_{_date}'
-    # v_df_dedup = db_jangho.get_tbl(tbl_name)
-    # v_df_dedup = variant_df.drop_duplicates('pk', ignore_index=True)
-    # v_df_dedup.loc[:, 'url'] = 'https://walmart.com' + v_df_dedup.loc[:, 'canonicalUrl']
+    time.sleep(100)
     
     # Crawling variant data
     df_list = []
@@ -381,3 +367,6 @@ if __name__ == '__main__':
     concat_df = pd.concat(df_list, ignore_index=True)
     concat_df.loc[:, 'option'] = concat_df.option.astype('str')
     db_jangho.engine_upload(upload_df=concat_df, table_name=f'walmart_variant_data_price_{_date}', if_exists_option='append')
+
+if __name__ == '__main__':
+    update()
