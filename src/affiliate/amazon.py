@@ -10,6 +10,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from bs4 import BeautifulSoup
+from selenium.webdriver.common.by import By
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     root = sys._MEIPASS
@@ -21,13 +22,15 @@ else:
 
 from database.conn import AccessDatabase
 from crawling.crawler import get_url
+from errors import Errors
 db_glamai = AccessDatabase('glamai')
 db_jangho = AccessDatabase('jangho')
+err = Errors()
 
-def get_data_amazon(url, wd=None):
+def get_data_amazon(url, wd=None, window=False, image=False):
 
     if wd is None:
-        wd = get_url(url)
+        wd = get_url(url, window, image)
     else:
         pass
     soup = BeautifulSoup(wd.page_source, 'lxml')
@@ -120,15 +123,64 @@ def get_data_amazon(url, wd=None):
                         price_sale = _price_normal
             
             elif soup.find('table', 'a-lineitem') is not None:
-                price_area = soup.find('table', 'a-lineitem')
-                is_use = 2
-    
+                try:
+                    # click add cart button
+                    if soup.find("input", {"id": "add-to-cart-button"}):
+                        wd.find_element(By.ID, "add-to-cart-button").click()
+                    
+                    # sign in
+                    wd = sign_in_amazon(wd)
+                    
+                    # go to cart
+                    wd.find_element(By.ID, "nav-cart").click()
+                    time.sleep(2.5)
+                    
+                    # scraping price data
+                    soup = BeautifulSoup(wd.page_source, 'lxml')
+                    price_area = soup.find("span", "a-size-medium a-color-base sc-price sc-white-space-nowrap sc-product-price a-text-bold")
+                    print(price_area)
+                    if price_area:
+                        price = price_area.text    
+                        price_sale = round(float(price[1:]), 2)
+                        price_normal = price_sale
+                        is_use = 1
+                        
+                        # delete item
+                        wd.find_element(By.ID, "deselect-all").click()
+                        time.sleep(2.5)
+                    else:
+                        is_use = 2
+                except:
+                    err.errors_log(url=url)
+                    is_use = 2
             else:
                 is_use, is_sale = -1, -1
                 
         wd.quit()
         return [url, page_status, avaliability_txt, price_normal, price_sale, is_sale, is_use, price]
+
+def sign_in_amazon(wd):
+    # email
+    email = 'yeonseosla@mycelebs.com' # 이메일을 입력해주세요.
+    elm_email = wd.find_element(By.ID, 'ap_email')
+    elm_email.send_keys(email)
+    wd.find_element(By.ID, 'continue').click()
+    time.sleep(2.5)
+
+    # Password
+    pw = 'm1234567!' # 비밀번호를 입력해주세요.
+    elm_pw = wd.find_element(By.ID, 'ap_password')
+    elm_pw.send_keys(pw)
+    wd.find_element(By.ID, 'signInSubmit').click()
+    time.sleep(2.5)
+
+    # click skip button
+    soup = BeautifulSoup(wd.page_source, 'lxml')
+    if soup.find("input", {"id": "ap-account-fixup-phone-skip-link"}):
+        wd.find_element(By.ID, 'ap-account-fixup-phone-skip-link').click()
+        time.sleep(2.5)
     
+    return wd
     
 def get_data():
     df_price = db_glamai.get_tbl('affiliate_price')
