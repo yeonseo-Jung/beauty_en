@@ -37,14 +37,18 @@ from crawling.crawler import get_url, json_iterator, get_headers
 from errors import Errors
 tbl_cache = os.path.join(root, 'tbl_cache')
 today = datetime.today().strftime('%y%m%d')
-db_glamai = AccessDatabase('glamai')
-db_jangho = AccessDatabase('jangho')
+# db_glamai = AccessDatabase('glamai')
+# db_jangho = AccessDatabase('jangho')
 errors = Errors()
 _date = datetime.today().strftime("%y%m%d")
 print(f'Today is {_date}')
 
 if not os.path.isdir(tbl_cache):
     os.mkdir(tbl_cache)
+
+def init_db(database):
+    return AccessDatabase(database)
+
 
 def dup_check(df, subset):
     
@@ -120,7 +124,8 @@ def get_items(brand, end_page=25):
 def get_brands():
     
     # 글램아이 전체 브랜드 가져오기
-    df = db_jangho.get_tbl('glamai_data', ['product_code', 'brand'])
+    db = init_db("glamai")
+    df = db.get_tbl('glamai_data', ['product_code', 'brand'])
     brands_df = df.groupby('brand').count().sort_values('product_code', ascending=False)
     brands = brands_df.index
 
@@ -337,9 +342,10 @@ def update():
     items_dict = crawling_items(brands)
     item_df, variant_df = scraping_items(items_dict)
     
+    db = init_db("jangho")
     try:
-        db_jangho.engine_upload(upload_df=item_df, table_name=f'walmart_item_data_{_date}', if_exists_option='append')
-        db_jangho.engine_upload(upload_df=variant_df, table_name=f'walmart_variant_data_{_date}', if_exists_option='append')
+        db.engine_upload(upload_df=item_df, table_name=f'walmart_item_data_{_date}', if_exists_option='append')
+        db.engine_upload(upload_df=variant_df, table_name=f'walmart_variant_data_{_date}', if_exists_option='append')
     except:
         errors.errors_log()
         
@@ -366,7 +372,284 @@ def update():
     
     concat_df = pd.concat(df_list, ignore_index=True)
     concat_df.loc[:, 'option'] = concat_df.option.astype('str')
-    db_jangho.engine_upload(upload_df=concat_df, table_name=f'walmart_variant_data_price_{_date}', if_exists_option='append')
+    db.engine_upload(upload_df=concat_df, table_name=f'walmart_variant_data_price_{_date}', if_exists_option='append')
+
+import ast
+from affiliate._preprocess import preprocess_titles, dup_check, subtractor
+
+def _preprocessing():
+    
+    '''Glamai Tables
+    - ds > jangho > `glamai_data`
+    - ds > jangho > `glamai_detail_data`
+    '''
+    db_glamai = init_db("glamai")
+    columns = ['product_code', 'item_no', 'product_name', 'brand', 'main_vertical', 'size', 'is_use']
+    glamai_data = db_glamai.get_tbl('glamai_data', columns)
+    columns = ['product_code', 'item_no', 'color', 'is_use']
+    glamai_detail = db_glamai.get_tbl('glamai_detail_data', columns)
+
+    glamai_df_0 = glamai_data.merge(glamai_detail.loc[:, ['product_code', 'item_no', 'color']], on=['product_code', 'item_no'], how='left')
+    glamai_df_1 = glamai_data.loc[:, ['product_code', 'product_name', 'brand', 'main_vertical']].merge(glamai_detail.loc[:, ['product_code', 'item_no', 'color', 'is_use']], on=['product_code'], how='left')
+    glamai_df = pd.concat([glamai_df_0, glamai_df_1]).drop_duplicates(subset=['product_code', 'item_no'], ignore_index=True)
+
+    glamai_df.loc[glamai_df['color'].str.strip()=='', 'color'] = None
+    glamai_df.loc[glamai_df['size']=='', 'size'] = None
+
+    '''Walmart Tables
+    walmart_item_data_{_date}
+    walmart_variant_data_{_date}
+    walmart_variant_data_price_{_date}
+    '''
+    db_jangho = init_db("jangho")
+    _walmart_df = db_jangho.get_tbl(f'walmart_item_data_{_date}')
+    _walmart_df.loc[:, 'url'] = 'https://www.walmart.com/' + _walmart_df.loc[:, 'canonicalUrl']
+
+    subset = ['usItemId']
+    walmart_df_dedup = _walmart_df.drop_duplicates(subset=subset, keep='first', ignore_index=True)
+    col = ['pk', 'usItemId', 'brand', 'product_name']
+    walmart_df = walmart_df_dedup.loc[:, col]
+    
+    preprocessed_df_0 = preprocess_titles(glamai_df)
+    preprocessed_df_1 = preprocess_titles(walmart_df)
+    preprocessed_df_0 = preprocessed_df_0[(preprocessed_df_0.brand.notnull()) & (preprocessed_df_0.preprocessed.notnull())].reset_index(drop=True)
+    preprocessed_df_1 = preprocessed_df_1[(preprocessed_df_1.brand.notnull()) & (preprocessed_df_1.preprocessed.notnull())].reset_index(drop=True)
+
+    df_list = []
+    for idx in tqdm(preprocessed_df_0.index):
+        product_code = preprocessed_df_0.loc[idx, 'product_code']
+        item_no = preprocessed_df_0.loc[idx, 'item_no']
+        
+        color = preprocessed_df_0.loc[idx, 'color']
+        size = preprocessed_df_0.loc[idx, 'size']
+        title = preprocessed_df_0.loc[idx, 'preprocessed'].lower().replace(' ', '')
+        brand = preprocessed_df_0.loc[idx, 'brand'].lower().replace(' ', '')
+        
+        # 브랜드, 타이틀 모두 일치하는 개체 찾기
+        brand_mapped = preprocessed_df_1.brand.str.lower().str.replace(' ', '').str.fullmatch(brand)
+        title_mapped = preprocessed_df_1.preprocessed.str.replace(' ', '').str.fullmatch(title)
+        mapped_data = preprocessed_df_1[brand_mapped & title_mapped].reset_index(drop=True)
+        
+        if mapped_data.empty:
+            pass
+        else:    
+            mapped_data.loc[:, 'product_code'] = product_code
+            mapped_data.loc[:, 'item_no'] = item_no
+            mapped_data.loc[:, 'color'] = color
+            mapped_data.loc[:, 'size'] = size
+            df_list.append(mapped_data)
+
+    mapped_df = pd.concat(df_list, ignore_index=True)
+    options_df = db_jangho.get_tbl(f'walmart_variant_data_price_{_date}')
+    for idx in options_df.index:
+        opts = ast.literal_eval(options_df.loc[idx, 'option'])
+        for opt in opts:
+            if opt[0:12] == 'actual_color':
+                color = opt.replace('actual_color-', '').strip()
+                options_df.loc[idx, 'walmart_color'] = color
+            elif opt[0:4] == 'size':
+                size = opt.replace('size-', '').strip()
+                options_df.loc[idx, 'walmart_size'] = size
+            else:
+                options_df.loc[idx, 'another_option'] = opt
+                
+    # 대표상품 중 옵션 존재 개체 join
+    opt_0 = mapped_df.merge(options_df.loc[:, ['usItemId', 'productId', 'walmart_color', 'walmart_size', 'another_option']], on='usItemId', how='left')
+
+    # 매핑 상품에 옵션 부여
+    pks = mapped_df.pk.unique() # 매핑 완료 개체 (대표상품)
+    ids = opt_0[opt_0.productId.notnull()].usItemId.unique() # 대표상품 중 옵션 존재 usItemId
+    col = ['pk', 'productId', 'usItemId', 'product_name', 'walmart_color', 'walmart_size', 'another_option']
+    _opt_1 = options_df.loc[(options_df.pk.isin(pks)) & (options_df.usItemId.isin(ids)==False), col]
+
+    col = ['pk', 'product_code', 'item_no', 'brand', 'color', 'size']
+    _mapped_df = mapped_df.loc[:, col]
+    opt_1 = _opt_1.merge(_mapped_df, on='pk', how='left')
+
+    # concat
+    mapped_opt_df = pd.concat([opt_0, opt_1]).sort_values(by=['pk', 'usItemId'], ignore_index=True)
+
+    # convert np.nan to None
+    mapped_opt_df = mapped_opt_df.where(pd.notnull(mapped_opt_df), None)
+
+    cols = ['walmart_color', 'walmart_size', 'another_option', 'volume_oz', 'volume_ml', 'volume_kg']
+    opts = ['color', 'size']
+    for idx in mapped_opt_df.index:
+        if mapped_opt_df.loc[idx, cols+opts].isnull().values.tolist().count(True) == len(opts) + len(cols):
+            # 옵션 자체가 존재하지 않음
+            status = -1       
+            attrs = None
+        else:
+            attrs = []
+            for opt in opts:    
+                opt = mapped_opt_df.loc[idx, opt]
+                if opt is None:
+                    pass
+                else:
+                    opt = opt.lower().replace(' ', '')
+                    for col in cols:
+                        attr = mapped_opt_df.loc[idx, col]
+                        if attr is None:
+                            pass
+                        else:    
+                            attr = attr.lower().replace(' ', '')
+                            if attr in opt:
+                                attrs.append(attr)
+            if len(attrs) == 0:
+                # 옵션은 존재하지만 일치하지 않음
+                status = 0
+                attrs = None
+            else:
+                # 옵션 일치
+                status = 1
+                attrs = str(list(set(attrs))) 
+        
+        mapped_opt_df.loc[idx, 'attributes'] = attrs
+        mapped_opt_df.loc[idx, 'mapped_status'] = status
+
+    # group by mapped_status count
+    print(f"\n\n{mapped_opt_df.groupby('mapped_status').count()}\n\n")
+    
+    # mapped_status==1: 브랜드, 상품명, 옵션 일치 
+    columns = ['product_code', 'item_no', 'brand', 'pk', 'usItemId', 'productId', 'attributes']
+    mapped_df_comp = mapped_opt_df.loc[mapped_opt_df.mapped_status==1, columns].sort_values(by=['product_code', 'item_no'], ignore_index=True)
+    print(f'- Glamai data: {len(glamai_df)}\n- Walmart data: {len(walmart_df)}\n- Mapping data: {len(mapped_df_comp)}')
+    
+    # Upload table: ds > jangho > `sephora_to_walmart_mapped_{_date}`
+    db_jangho.engine_upload(mapped_opt_df, f'sephora_to_walmart_mapped_{_date}', if_exists_option='replace')
+    
+def _mapping():
+
+    # get data
+    db_jangho = init_db("jangho")
+    item_df = db_jangho.get_tbl(f'walmart_item_data_{_date}')
+    v_p_df = db_jangho.get_tbl(f'walmart_variant_data_price_{_date}')
+    map_df = db_jangho.get_tbl(f'sephora_to_walmart_mapped_{_date}')
+    cols = ['product_code', 'item_no', 'usItemId', 'mapped_status']
+    _map_df = map_df.loc[:, cols]
+
+    cols = ['usItemId', 'canonicalUrl', 'price', 'sale_price', 'availabilityStatus']
+    _item_df = item_df.loc[:, cols]
+    _v_p_df = v_p_df.loc[:, cols]
+    
+    # Merge: price data
+    mer_df_0 = _map_df.merge(_item_df, on='usItemId', how='inner')
+    mer_df_1 = _map_df.merge(_v_p_df, on='usItemId', how='inner')
+
+    mer_df = pd.concat([mer_df_0, mer_df_1], ignore_index=True)
+    subset = ['product_code', 'item_no', 'usItemId']
+    dedup_df = mer_df.drop_duplicates(subset=subset, keep='last', ignore_index=True)
+
+    # affiliate data
+    dedup_df.loc[:, 'affiliate_type'] = 'walmart'
+    dedup_df.loc[:, 'affiliate_url'] = 'https://www.walmart.com' + dedup_df['canonicalUrl']
+    dedup_df.loc[:, 'affiliate_image'] = 'https://alls3.glamai.com/images/affiliate/walmart.jpg'
+    
+    # stock status check (is_use)
+    dedup_df.loc[(dedup_df['availabilityStatus']=='In stock') | (dedup_df['availabilityStatus']=='IN_STOCK'), 'is_use'] = True
+    dedup_df.loc[(dedup_df['availabilityStatus']!='In stock') & (dedup_df['availabilityStatus']!='IN_STOCK'), 'is_use'] = False
+
+    # sale status check (is_sale)
+    dedup_df.loc[dedup_df['price']>dedup_df['sale_price'], 'is_sale'] = True
+    dedup_df.loc[dedup_df['price']==dedup_df['sale_price'], 'is_sale'] = False
+
+    dedup_df.loc[dedup_df['sale_price']==0, 'is_sale'] = False
+    dedup_df.loc[dedup_df['sale_price']==0, 'is_use'] = False
+    
+    columns = ['product_code', 'item_no', 'affiliate_type', 'affiliate_url', 'affiliate_image', 'usItemId', 'price', 'sale_price', 'is_sale', 'is_use']
+    upload_df = dedup_df.loc[dedup_df.mapped_status==1, columns].sort_values(by=['product_code', 'item_no'], ignore_index=True)
+    regist_date = pd.Timestamp(datetime.today().strftime("%Y-%m-%d"))
+    upload_df.loc[:, 'regist_date'] = regist_date
+    upload_df.loc[:, 'update_date'] = regist_date
+
+    """
+    월마트 내부 중복 체크 
+    - dedup = 1(True): 대표상품 (가격 낮은 상품)
+    - dedup = 0(False): 종속상품 (가격 높은 상품 or is_use = 0(False))
+    """
+    _upload_df = upload_df[upload_df.is_use].sort_values(by='sale_price', ignore_index=True)
+    upload_df_ = upload_df[upload_df.is_use==False]
+
+    subset = ['product_code', 'item_no']
+    dedup_df = _upload_df.drop_duplicates(subset=subset, keep='first', ignore_index=True)
+    dup_df = dup_check(df=_upload_df, subset=subset, keep='first', sorting=True)
+
+    dedup_df.loc[:, 'dedup'] = True
+    if not upload_df_.empty:
+        upload_df_ = upload_df_.reset_index(drop=True)
+        upload_df_.loc[:, 'dedup'] = False # is_use=0(False) 이면 중복으로 간주 -> 서비스 테이블에 insert 안 되게 하기 위함
+    dup_df.loc[:, 'dedup'] = False
+    concat_df = pd.concat([dedup_df, upload_df_, dup_df]).sort_values(by=subset, ignore_index=True)
+
+    print(f"\n\n{concat_df.groupby('dedup').count()}\n\n")
+    
+    # Table Upload: ds > jangho > sephora_to_walmart_mapped
+    db_jangho = init_db("jangho")
+    db_jangho.create_table(upload_df=concat_df, table_name='sephora_to_walmart_mapped')
+    
+    return concat_df
+    
+def upload():
+    concat_df = _mapping()
+    db_glamai = init_db("glamai")
+    db_jangho = init_db("jangho")
+    
+    query = f'''
+    update glamai.affiliate_price as a
+    join jangho.sephora_to_walmart_mapped as b 
+    on a.product_code = b.product_code and a.item_no = b.item_no and a.affiliate_type = b.affiliate_type
+    set a.price = b.price, a.sale_price = b.sale_price, a.is_sale = b.is_sale, a.is_use = b.is_use, a.update_date = b.update_date
+    where b.dedup=1;'''
+    db_jangho._execute(query)
+    
+    query = f"""
+    SELECT product_code, item_no
+    FROM affiliate_price as a
+    WHERE a.is_use=1 and a.affiliate_type='walmart';
+    """
+    data = db_glamai._execute(query)
+    df = pd.DataFrame(data)
+    dedup_df = concat_df.loc[concat_df.dedup, ['product_code', 'item_no', 'affiliate_type', 'affiliate_url', 'affiliate_image', 'price', 'sale_price', 'is_sale', 'is_use', 'regist_date', 'update_date']]
+
+    subset=['product_code', 'item_no']
+    new_df = subtractor(dedup_df, df, subset)
+    print(f"\n\nNew product counts: {len(new_df)}\n\n")
+    
+    affi_tbl = "affiliate_price"
+
+    # Table bakcup: ds > glamai > affiliate_price_bak_{_date}
+    db_glamai._backup(table_name=affi_tbl, keep=True)
+
+    # Table upload: ds > glamai > affiliate_price
+    db_glamai.engine_upload(upload_df=new_df, table_name=affi_tbl, if_exists_option='append')
+    
+    # glamai.affiliate_price dedup & dup check
+    # /* dedup query */
+    dedup_query = f"""
+    delete 
+        t1 
+    from 
+        glamai.affiliate_price t1, glamai.affiliate_price t2
+    where 
+        t1.product_code = t2.product_code and 
+        t1.item_no = t2.item_no and
+        t1.affiliate_type = t2.affiliate_type and
+        t1.update_date < t2.update_date;"""
+
+    # /* dup check query */	
+    dup_check_query = f"""
+    select product_code, item_no, affiliate_type, count(*) cnt from glamai.affiliate_price group by product_code, item_no, affiliate_type having cnt > 1;
+    """
+
+    data = db_glamai._execute(dup_check_query)
+    df = pd.DataFrame(data)
+    if df.empty:
+        print("중복 제거 완료.")
+    else:
+        print("중복인 행이 존재합니다. 중복제거 진행합니다.")
+        data = db_glamai._execute(dedup_query)
 
 if __name__ == '__main__':
     update()
+    time.sleep(60)
+    upload()
