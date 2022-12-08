@@ -27,11 +27,11 @@ class ReviewData:
 
     def __conn__(self):
         self.ds = AccessDatabase('glamai')
-        self.ds_conn, self.ds_cur = self.ds._connect()
+        self.ds_conn, self.ds_curs = self.ds._connect()
         
     def __close__(self):
         self.ds_conn.commit()
-        self.ds_cur.close()
+        self.ds_curs.close()
         self.ds_conn.close()
         
     def get_review_max_date(self):
@@ -39,15 +39,15 @@ class ReviewData:
             select product_code, max(write_time)
             from sephora_review_date_re group by product_code;
         '''
-        self.ds_cur.execute(sql)
-        data = self.ds_cur.fetchall()
+        self.ds_curs.execute(sql)
+        data = self.ds_curs.fetchall()
         return data
 
     def insert_to_table_review(self, data):
         sql = '''insert into sephora_txt_data_re
         (product_code, color_id, rating, skin_type, eye_color, skin_concerns, hair_color, skin_tone, age, txt_title, txt_data, like_count, write_time, regist_date)
          values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'''
-        self.ds_cur.executemany(sql, data)
+        self.ds_curs.executemany(sql, data)
         self.ds_conn.commit()
         
     def _scraper(self, product_code, rev_data):
@@ -155,19 +155,19 @@ class ReviewDate:
 
     def __conn__(self):
         self.ds = AccessDatabase('glamai')
-        self.ds_conn, self.ds_cur = self.ds._connect()
+        self.ds_conn, self.ds_curs = self.ds._connect()
         
     def __close__(self):
         self.ds_conn.commit()
-        self.ds_cur.close()
+        self.ds_curs.close()
         self.ds_conn.close()
         
     def get_data(self):
         sql = '''
             select product_code, max(write_time) as write_time from sephora_txt_data_re group by product_code;
         '''
-        self.ds_cur.execute(sql)
-        glamai_data = self.ds_cur.fetchall()
+        self.ds_curs.execute(sql)
+        glamai_data = self.ds_curs.fetchall()
         
         result = []
         for bd in glamai_data:
@@ -182,7 +182,7 @@ class ReviewDate:
         sql = f'''update sephora_review_date_re
             set write_time = %s, update_date = \'{update_date}\' where product_code = %s;
         '''
-        self.ds_cur.executemany(sql, data)
+        self.ds_curs.executemany(sql, data)
         self.ds_conn.commit()
 
     def update_review_date(self):
@@ -192,11 +192,73 @@ class ReviewDate:
         
         return result
     
+    def dedup(self):
+        
+        replace_query = "UPDATE sephora_txt_data_re SET txt_data = REPLACE(txt_data, '.Not impressed.', '.') WHERE BINARY(txt_data) LIKE '%Not impressed.';"
+        dedup_query_1 = '''
+        delete t1 
+        from sephora_txt_data_re t1, sephora_txt_data_re t2 
+        where 
+        t1.product_code=t2.product_code and 
+        t1.txt_data = t2.txt_data and 
+        t1.write_time =t2.write_time and
+        t1.like_count < t2.like_count;
+        '''
+        dedup_query_2 = '''
+        delete t1 
+        from sephora_txt_data_re t1, sephora_txt_data_re t2
+        where 
+        t1.product_code = t2.product_code and 
+        t1.txt_data = t2.txt_data and
+        t1.write_time = t2.write_time and
+        t1.like_count = t2.like_count and
+        t1.pk < t2.pk;'''
+
+        # connect
+        self.__conn__()
+        
+        # repalce
+        self.ds_curs.execute(replace_query)
+        self.ds_conn.commit()
+        
+        # dedup 1
+        self.ds_curs.execute(dedup_query_1)
+        self.ds_conn.commit()
+        
+        # dedup 2
+        self.ds_curs.execute(dedup_query_2)
+        self.ds_conn.commit()
+        
+        # Check query
+        query = '''
+        select product_code, txt_data, write_time, like_count, count(*) as cnt
+        from sephora_txt_data_re
+        group by product_code, txt_data, write_time
+        having cnt > 1;'''
+        self.ds_curs.execute(query)
+        data = self.ds_curs.fetchall()
+
+        if len(data) == 0:
+            print('\n\nComplete dedup.\n\n')
+        else:
+            print('\n\nDedup Failed!\n\n')
+
+        # commit & close
+        self.__close__()
+    
 if __name__=='__main__':
+    
+    # Crawling txt data (new review)
     rev = ReviewData()
     txt_data, error = rev._crawling()
     
     time.sleep(100)
     
+    # Update review date
     revdate = ReviewDate()
     result = revdate.update_review_date()
+    
+    time.sleep(60)
+    
+    # Dedup
+    revdate.dedup()
