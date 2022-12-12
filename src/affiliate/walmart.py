@@ -37,8 +37,6 @@ from crawling.crawler import get_url, json_iterator, get_headers
 from errors import Errors
 tbl_cache = os.path.join(root, 'tbl_cache')
 today = datetime.today().strftime('%y%m%d')
-# db_glamai = AccessDatabase('glamai')
-# db_jangho = AccessDatabase('jangho')
 errors = Errors()
 _date = datetime.today().strftime("%y%m%d")
 print(f'Today is {_date}')
@@ -48,7 +46,6 @@ if not os.path.isdir(tbl_cache):
 
 def init_db(database):
     return AccessDatabase(database)
-
 
 def dup_check(df, subset):
     

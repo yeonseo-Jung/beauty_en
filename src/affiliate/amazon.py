@@ -146,8 +146,8 @@ def get_data_amazon(url, wd=None, window=False, image=False):
                         is_use = 1
                         
                         # delete item
-                        wd.find_element(By.ID, "deselect-all").click()
-                        time.sleep(2.5)
+                        # wd.find_element(By.ID, "deselect-all").click()
+                        # time.sleep(2.5)
                     else:
                         is_use = 2
                 except:
