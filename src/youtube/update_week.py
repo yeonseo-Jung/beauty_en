@@ -26,7 +26,15 @@ db_glamai = AccessDatabase("glamai")
 
 def get_input_data():
     # 신규 수집 데이터
-    before_a_week = (datetime.now() + timedelta(-7)).strftime('%y%m%d')
+    # before_a_week = (datetime.now() + timedelta(-10)).strftime('%y%m%d')
+    query = """
+        SELECT regist_date 
+        FROM glamai_youtube_urls
+        ORDER BY regist_date DESC
+        LIMIT 1;
+    """
+    data = db_glamai._execute(query)
+    before_a_week = data[0]["regist_date"].strftime("%Y-%m-%d")
     conn, curs = db_glamai._connect()
     data = pd.read_sql(f'''
     select distinct product_code, product_name, brand from glamai.sephora_eye_data where regist_date > '{before_a_week}'
