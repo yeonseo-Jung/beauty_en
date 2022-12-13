@@ -206,8 +206,10 @@ def upload():
     concat_df = pd.concat([glamai_youtube_urls, result_df], ignore_index=True)
 
     # sorting & dedup
-    subset = ['product_code', 'thumbnail', 'title', 'yt_id', 'duration', 'youtuber']
-    by = subset + ['regist_date']
-    sorted_df = concat_df.sort_values(by=by, ascending=False)
+    sorted_df = concat_df.sort_values(by="regist_date", ascending=False)
+    subset = ['product_code', 'yt_url']
     dedup_df = sorted_df.drop_duplicates(subset=subset, keep='first', ignore_index=True)
     db_glamai.create_table(dedup_df, 'glamai_youtube_urls')
+    
+if __name__ == "__main__":
+    upload()

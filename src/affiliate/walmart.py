@@ -39,7 +39,7 @@ tbl_cache = os.path.join(root, 'tbl_cache')
 today = datetime.today().strftime('%y%m%d')
 errors = Errors()
 _date = datetime.today().strftime("%y%m%d")
-print(f'Today is {_date}')
+print(f'\n\nToday is {_date}')
 
 if not os.path.isdir(tbl_cache):
     os.mkdir(tbl_cache)
@@ -510,7 +510,7 @@ def _preprocessing():
     # mapped_status==1: 브랜드, 상품명, 옵션 일치 
     columns = ['product_code', 'item_no', 'brand', 'pk', 'usItemId', 'productId', 'attributes']
     mapped_df_comp = mapped_opt_df.loc[mapped_opt_df.mapped_status==1, columns].sort_values(by=['product_code', 'item_no'], ignore_index=True)
-    print(f'- Glamai data: {len(glamai_df)}\n- Walmart data: {len(walmart_df)}\n- Mapping data: {len(mapped_df_comp)}')
+    print(f'\n\n- Glamai data: {len(glamai_df)}\n- Walmart data: {len(walmart_df)}\n- Mapping data: {len(mapped_df_comp)}')
     
     # Upload table: ds > jangho > `sephora_to_walmart_mapped_{_date}`
     db_jangho.engine_upload(mapped_opt_df, f'sephora_to_walmart_mapped_{_date}', if_exists_option='replace')
@@ -641,9 +641,9 @@ def upload():
     data = db_glamai._execute(dup_check_query)
     df = pd.DataFrame(data)
     if df.empty:
-        print("중복 제거 완료.")
+        print("\n\n중복 제거 완료.\nWalmart 신규 매핑 업데이트 및 status check 완료되었습니다.")
     else:
-        print("중복인 행이 존재합니다. 중복제거 진행합니다.")
+        print("\n\n중복인 행이 존재합니다. 중복제거 진행합니다.")
         data = db_glamai._execute(dedup_query)
 
 if __name__ == '__main__':
