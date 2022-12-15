@@ -587,7 +587,9 @@ def _mapping():
     return concat_df
     
 def upload():
+    _preprocessing()
     concat_df = _mapping()
+    
     db_glamai = init_db("glamai")
     db_jangho = init_db("jangho")
     
