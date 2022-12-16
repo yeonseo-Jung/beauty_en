@@ -26,15 +26,16 @@ db_glamai = AccessDatabase("glamai")
 
 def get_input_data():
     # 신규 수집 데이터
-    # before_a_week = (datetime.now() + timedelta(-10)).strftime('%y%m%d')
-    query = """
-        SELECT regist_date 
-        FROM glamai_youtube_urls
-        ORDER BY regist_date DESC
-        LIMIT 1;
-    """
-    data = db_glamai._execute(query)
-    before_a_week = data[0]["regist_date"].strftime("%Y-%m-%d")
+    before_a_week = (datetime.now() + timedelta(-10)).strftime("%Y-%m-%d")
+    # query = """
+    #     SELECT regist_date 
+    #     FROM glamai_youtube_urls
+    #     ORDER BY regist_date DESC
+    #     LIMIT 1;
+    # """
+    # data = db_glamai._execute(query)
+    # before_a_week = data[0]["regist_date"].strftime("%Y-%m-%d")
+    print("\n\n", "before_a_week: ", before_a_week, "\n\n")
     conn, curs = db_glamai._connect()
     data = pd.read_sql(f'''
     select distinct product_code, product_name, brand from glamai.sephora_eye_data where regist_date > '{before_a_week}'
@@ -210,14 +211,18 @@ def upload():
     glamai_youtube_urls = db_glamai.get_tbl('glamai_youtube_urls').iloc[:, 1:]
 
     result_df = preprocessor()
-    result_df.loc[:, 'regist_date'] = datetime.now()
-    concat_df = pd.concat([glamai_youtube_urls, result_df], ignore_index=True)
-
-    # sorting & dedup
-    sorted_df = concat_df.sort_values(by="regist_date", ascending=False)
-    subset = ['product_code', 'yt_url']
-    dedup_df = sorted_df.drop_duplicates(subset=subset, keep='first', ignore_index=True)
-    db_glamai.create_table(dedup_df, 'glamai_youtube_urls')
+    if result_df.empty:    
+        print("\n\nCrawled data is empty!\n\n")
+    else:
+        result_df.loc[:, 'regist_date'] = datetime.now()
+        concat_df = pd.concat([glamai_youtube_urls, result_df], ignore_index=True)
+        
+        # sorting & dedup
+        sorted_df = concat_df.sort_values(by="regist_date", ascending=False)
+        subset = ['product_code', 'yt_url']
+        dedup_df = sorted_df.drop_duplicates(subset=subset, keep='first', ignore_index=True)
+        db_glamai.create_table(dedup_df, 'glamai_youtube_urls')
+        print("\n\nComplete table upload: `ds > glamai > glamai_youtube_urls`\n\n")
     
 if __name__ == "__main__":
     upload()
