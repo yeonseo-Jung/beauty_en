@@ -35,11 +35,11 @@ def get_data_amazon(url, wd=None, window=False, image=False):
         pass
     soup = BeautifulSoup(wd.page_source, 'lxml')
     if soup is None:
-        print("soup is None")
+        print("\n\nsoup is None!")
         wd.quit()
         return None
     elif soup.find('div', 'a-box a-color-offset-background') is not None:
-        print("\n\nEnter the characters you see below\nSorry, we just need to make sure you're not a robot.\nFor best results, please make sure your browser is accepting cookies.\n\n")
+        print("\n\nEnter the characters you see below\nSorry, we just need to make sure you're not a robot.\nFor best results, please make sure your browser is accepting cookies.")
         wd.quit()
         return None
     else:    
@@ -138,7 +138,6 @@ def get_data_amazon(url, wd=None, window=False, image=False):
                     # scraping price data
                     soup = BeautifulSoup(wd.page_source, 'lxml')
                     price_area = soup.find("span", "a-size-medium a-color-base sc-price sc-white-space-nowrap sc-product-price a-text-bold")
-                    print(price_area)
                     if price_area:
                         price = price_area.text    
                         price_sale = round(float(price[1:]), 2)
@@ -197,10 +196,14 @@ def _crawling(df):
     regist_date = df.regist_date
     
     crawled = get_data_amazon(affiliate_url)
+    cnt = 0
     while crawled is None:
         wd = get_url(affiliate_url, window=True, image=True)
         time.sleep(100)
         crawled = get_data_amazon(affiliate_url, wd)
+        cnt += 1
+        if cnt == 3:
+            break
     
     updated = [product_code, item_no, affiliate_type, affiliate_image, regist_date] + crawled
     

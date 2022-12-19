@@ -35,7 +35,7 @@ def get_input_data():
     # """
     # data = db_glamai._execute(query)
     # before_a_week = data[0]["regist_date"].strftime("%Y-%m-%d")
-    print("\n\n", "before_a_week: ", before_a_week, "\n\n")
+    print("\n\n", "before_a_week: ", before_a_week)
     conn, curs = db_glamai._connect()
     data = pd.read_sql(f'''
     select distinct product_code, product_name, brand from glamai.sephora_eye_data where regist_date > '{before_a_week}'
@@ -212,7 +212,7 @@ def upload():
 
     result_df = preprocessor()
     if result_df.empty:    
-        print("\n\nCrawled data is empty!\n\n")
+        print("\n\nCrawled data is empty!")
     else:
         result_df.loc[:, 'regist_date'] = datetime.now()
         concat_df = pd.concat([glamai_youtube_urls, result_df], ignore_index=True)
@@ -222,7 +222,7 @@ def upload():
         subset = ['product_code', 'yt_url']
         dedup_df = sorted_df.drop_duplicates(subset=subset, keep='first', ignore_index=True)
         db_glamai.create_table(dedup_df, 'glamai_youtube_urls')
-        print("\n\nComplete table upload: `ds > glamai > glamai_youtube_urls`\n\n")
+        print("\n\nComplete table upload: `ds > glamai > glamai_youtube_urls`")
     
 if __name__ == "__main__":
     upload()

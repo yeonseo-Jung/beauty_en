@@ -120,7 +120,7 @@ def _upload(data):
     
     return crawling_df, upload_df
 
-def main():
+def update_affiliate_ulta():
     df_ulta = get_data()
     datas, error = [], []
     for value in tqdm(df_ulta.values):
@@ -132,5 +132,7 @@ def main():
             datas.append(data)
     crawling_df, upload_df = _upload(datas)
     
+    return crawling_df, upload_df
+    
 if __name__ == '__main__':
-    main()
+    crawling_df, upload_df = update_affiliate_ulta()

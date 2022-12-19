@@ -505,7 +505,7 @@ def _preprocessing():
         mapped_opt_df.loc[idx, 'mapped_status'] = status
 
     # group by mapped_status count
-    print(f"\n\n{mapped_opt_df.groupby('mapped_status').count()}\n\n")
+    print(f"\n\n{mapped_opt_df.groupby('mapped_status').count()}")
     
     # mapped_status==1: 브랜드, 상품명, 옵션 일치 
     columns = ['product_code', 'item_no', 'brand', 'pk', 'usItemId', 'productId', 'attributes']
@@ -578,7 +578,7 @@ def _mapping():
     dup_df.loc[:, 'dedup'] = False
     concat_df = pd.concat([dedup_df, upload_df_, dup_df]).sort_values(by=subset, ignore_index=True)
 
-    print(f"\n\n{concat_df.groupby('dedup').count()}\n\n")
+    print(f"\n\n{concat_df.groupby('dedup').count()}")
     
     # Table Upload: ds > jangho > sephora_to_walmart_mapped
     db_jangho = init_db("jangho")
@@ -612,7 +612,7 @@ def upload():
 
     subset=['product_code', 'item_no']
     new_df = subtractor(dedup_df, df, subset)
-    print(f"\n\nNew product counts: {len(new_df)}\n\n")
+    print(f"\n\nNew product counts: {len(new_df)}")
     
     affi_tbl = "affiliate_price"
 

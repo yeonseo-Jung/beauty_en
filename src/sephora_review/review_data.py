@@ -1,8 +1,7 @@
 import os
 import sys
 import time
-import json
-import requests
+import pickle
 import datetime
 import pymysql
 from tqdm import tqdm
@@ -19,7 +18,9 @@ from crawling.crawler import json_iterator
 from database.conn import AccessDatabase
 
 tbl_cache = os.path.join(root, 'tbl_cache')
-_date = datetime.datetime.today().strftime("%y%m%d")
+if not os.path.exists(tbl_cache):
+    os.mkdir(tbl_cache)
+    
 
 class ReviewData:
     def __init__(self):
@@ -252,7 +253,15 @@ if __name__=='__main__':
     rev = ReviewData()
     txt_data, error = rev._crawling()
     
-    time.sleep(100)
+    txt_data_path = os.path.join(tbl_cache, "txt_data.txt")
+    with open(txt_data_path, "wb") as f:
+        pickle.dump(txt_data, f)
+        
+    error_path = os.path.join(tbl_cache, "error.txt")
+    with open(error_path, "wb") as f:
+        pickle.dump(error, f)
+    
+    time.sleep(60)
     
     # Update review date
     revdate = ReviewDate()
